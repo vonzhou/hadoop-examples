@@ -21,6 +21,7 @@ public class Deduplication {
             Mapper<LongWritable, Text, Text, NullWritable> {
         private static Text line = new Text();
 
+        // 把输入的value作为输出的key,输出的value无关紧要
         public void map(LongWritable key, Text value, Context context)
                 throws IOException, InterruptedException {
             line = value;

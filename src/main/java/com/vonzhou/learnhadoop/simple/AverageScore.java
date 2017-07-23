@@ -16,19 +16,31 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-public class WordCount {
+/**
+ * 计算平均成绩
+ * 输入文件的每行是: (姓名 成绩)
+ */
+public class AverageScore {
 
     public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
-        private final static IntWritable one = new IntWritable(1);
-        private Text word = new Text();
 
-        public void map(LongWritable key, Text value, Context context)
-                throws IOException, InterruptedException {
+        public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            StringTokenizer tokenizer = new StringTokenizer(line);
-            while (tokenizer.hasMoreTokens()) {
-                word.set(tokenizer.nextToken());
-                context.write(word, one);
+            // 输出读入的内容
+            System.out.println(line);
+            StringTokenizer tokenizerLine = new StringTokenizer(line);
+
+            // 处理每行
+            while (tokenizerLine.hasMoreTokens()) {
+
+                // 分隔行,取出各个字段
+                StringTokenizer tokenizerWord = new StringTokenizer(tokenizerLine.nextToken());
+                String strName = tokenizerWord.nextToken();
+                String strScore = tokenizerWord.nextToken();
+
+                Text name = new Text(strName);
+                int scoreInt = Integer.valueOf(strScore);
+                context.write(name, new IntWritable(scoreInt));
             }
         }
     }
@@ -36,31 +48,30 @@ public class WordCount {
     public static class Reduce extends
             Reducer<Text, IntWritable, Text, IntWritable> {
 
+        // 达到的记录 key是姓名,values是成绩列表
         public void reduce(Text key, Iterable<IntWritable> values,
                            Context context) throws IOException, InterruptedException {
             int sum = 0;
+            int count = 0;
             for (IntWritable val : values) {
                 sum += val.get();
+                count ++;
             }
-            context.write(key, new IntWritable(sum));
+            context.write(key, new IntWritable(sum/count));
         }
     }
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
 
-        Job job = new Job(conf, "wordcount");
-        job.setJarByClass(WordCount.class);
+        Job job = new Job(conf, "averagescore");
+        job.setJarByClass(AverageScore.class);
 
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
 
         job.setMapperClass(Map.class);
         job.setReducerClass(Reduce.class);
-        /**
-         * 设置一个本地combine,可以极大的消除本节点重复单词的计数,减小网络传输的开销
-         */
-        job.setCombinerClass(Reduce.class);
 
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);

@@ -48,6 +48,7 @@ public class Sort {
             int maxNum = 65223;
             int bound = maxNum / numPartitions + 1;
             int keynum = key.get();
+            // 判断当前这个Int值落在哪个分区中
             for(int i=0; i< numPartitions;i++){
                 if(keynum< bound * i && keynum >= bound * (i-1))
                     return i-1;
