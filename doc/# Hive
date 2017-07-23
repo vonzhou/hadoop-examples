@@ -1,0 +1,10 @@
+# Hive 
+
+
+
+hive-config.sh
+
+```
+HADOOP_HOME=/usr/local/Cellar/hadoop/2.7.1
+```
+
